@@ -1,0 +1,69 @@
+#/bin/bash
+
+# Remove the old AVD
+echo "Remove old emulator"
+android delete avd -n AutoMobSpec
+
+# Create the directory for the current test run
+echo "Create test directory"
+NOW=$(date +%Y-%m-%d-%H-%M-%S)
+mkdir $NOW
+cd $NOW
+
+# Create the emulator
+echo "Create new emulator"
+mksdcard 100MB ./sdcard.img
+echo "n" | android create avd -n AutoMobSpec -t 10 -c ./sdcard.img
+
+# Start the emulator
+echo "Start emulator"
+# emulator -avd AutoMobSpec -no-window &
+emulator -avd AutoMobSpec &
+
+# Clone the Android source code
+echo "Clone phonegap-android"
+git clone git@github.com:phonegap/phonegap-android.git
+
+# Setup local properties for ant build
+echo "Setup local properties for ant build"
+cd phonegap-android/framework
+echo "sdk.dir=$ANDROID_HOME" > local.properties 
+
+# Build the phonegap-android framework
+echo "Build the phonegap-android framework"
+ant jar
+
+# Clone the mobile-spec test suite
+echo "Clone the mobile-spec test suite"
+cd ../..
+git clone git@github.com:phonegap/mobile-spec.git
+
+# Create new Android project
+echo "Create new Android project"
+cd phonegap-android
+bin/create ../test com.phonegap.test MobileSpec
+
+# Get the current PhoneGap version
+echo "Get the current PhoneGap version"
+VERSION=$(cat ./VERSION)
+
+# Copy mobile-spec code into the sample project
+echo "Copy mobile-spec code into the sample project"
+cd ..
+cp -r mobile-spec/autotest/* test/assets/www
+echo "document.write('<script type=\"text/javascript\" charset=\"utf-8\" src="phonegap-"$VERSION".js"></script>');" > test/assets/phonegap.js
+echo "document.write('<script type=\"text/javascript\" charset=\"utf-8\" src="../phonegap-"$VERSION".js"></script>');" >> test/assets/phonegap.js
+
+# Go to sleep for 2 minutes while the emulator starts
+echo "Sleep for two minutes to let AVD start up"
+sleep 120
+
+# Build the sample project 
+echo "Build the sample project"
+cd test
+ant debug install
+
+# Run the project
+echo "Run the project"
+adb shell am start -n com.phonegap.test/com.phonegap.test.MobileSpec
+
