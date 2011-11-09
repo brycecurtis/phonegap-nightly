@@ -1,0 +1,38 @@
+#/bin/bash
+
+# Create the directory for the current build
+echo "Create test directory"
+NOW=$(date +%Y%m%d-%H%M%S)
+mkdir tmp
+cd tmp
+
+# Clone the Android source code
+echo "Clone callback-android"
+git clone git@github.com:callback/callback-android.git
+
+# Setup local properties for ant build
+echo "Setup local properties for ant build"
+cd callback-android/framework
+echo "sdk.dir=$ANDROID_HOME" > local.properties 
+
+# Build the callback-android framework
+echo "Build the callback-android framework"
+ant jar
+
+# Get the current PhoneGap version
+echo "Get the current PhoneGap version"
+cd ..
+VERSION=$(cat ./VERSION)
+
+# Create nightly build dir
+echo "Create directory for nightly build"
+cd ../..
+BUILD_DIR="Android-$VERSION-$NOW"
+mkdir $BUILD_DIR
+
+# Copy files
+echo "Copy files into nightly build directory"
+cp "tmp/callback-android/framework/phonegap-$VERSION.jar" $BUILD_DIR
+cp "tmp/callback-android/framework/assets/www/phonegap-$VERSION.js" $BUILD_DIR
+rm -Rf "tmp"
+
