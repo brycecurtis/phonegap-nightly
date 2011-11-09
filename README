@@ -14,22 +14,3 @@ For Android, this directory and its contents are:
 
 NOTE: Only Android is supported right now.
 
-
-The following instructions are for the administrator who is creating the nightly build and pushing it to this repository.
- 
-Run bin/build to generate build.  This script does the following:
-
-1. Checks out latest code from github
-
-2. Builds the PhoneGap libraries
-
-3. Copies them into a directory with the following format:
-
-    Platform-version-date-time
-
-For Android, this directory and its contents are:
-
-    Android-1.2.0-20111101-160000
-        - phonegap-1.2.0.jar
-        - phonegap-1.2.0.js
-
